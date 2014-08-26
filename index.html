@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>JS Bin</title>
+    <script>var module = {}</script>
+    <script src="https://raw.githubusercontent.com/paulrouget/CSS-Triggers/gecko/chromium.js"></script>
+    <script>var chromium = module.exports</script>
+    <script src="https://raw.githubusercontent.com/paulrouget/CSS-Triggers/gecko/gecko.js"></script>
+    <script>var gecko = module.exports</script>
+    <script>
+
+      window.addEventListener("load", function() {
+
+        var mungedData = {};
+        var data = chromium.data;
+        var keys = Object.keys(data);
+
+        console.log(keys.length);
+        for (var k = 0; k < keys.length; k++) {
+
+          var property = keys[k];
+          var initial = /\-initial$/;
+          var change = /\-change$/;
+          var isInitial = initial.test(property);
+          var isChange = change.test(property);
+
+          property = property.replace(initial, '');
+          property = property.replace(change, '');
+
+          if (!mungedData[property]) {
+            mungedData[property] = {
+              gecko:  {
+                "initial": {
+                  "layout": null, "paint": null, "composite": null
+                },
+                "change": {
+                  "layout": null, "paint": null, "composite": null
+                }
+              },
+              chromium:  {
+                "initial": {
+                  "layout": null, "paint": null, "composite": null
+                },
+                "change": {
+                  "layout": null, "paint": null, "composite": null
+                }
+              }
+            };
+          }
+
+          var cValue = chromium.data[keys[k]];
+          var gValue = gecko.data[keys[k]];
+
+          if (isInitial) {
+            mungedData[property].gecko.initial = gValue;
+            mungedData[property].chromium.initial = cValue;
+
+          } else if (isChange) {
+            mungedData[property].gecko.change = gValue;
+            mungedData[property].chromium.change = cValue;
+          }
+
+
+        }
+
+        var mKeys = Object.keys(mungedData);
+        var ymlString = '';
+
+        var htmlString = '';
+        var htmlTemplate = document.getElementById('property-template').innerHTML;
+
+        for (var m = 0; m < mKeys.length; m++) {
+          var mProperty = mKeys[m];
+          var mValue = mungedData[mProperty];
+
+          var isInitialSame = (mValue.gecko.initial.paint == mValue.chromium.initial.paint) &&
+            (mValue.gecko.initial.layout == mValue.chromium.initial.layout) &&
+            (mValue.gecko.initial.composite == mValue.chromium.initial.composite);
+          isInitialSame = isInitialSame ? "isSame":"isDifferent";
+
+          var isChangeSame = (mValue.gecko.change.paint == mValue.chromium.change.paint) &&
+            (mValue.gecko.change.layout == mValue.chromium.change.layout) &&
+            (mValue.gecko.change.composite == mValue.chromium.change.composite);
+          isChangeSame = isChangeSame ? "isSame":"isDifferent";
+
+          var htmlForProperty = htmlTemplate.replace(/\{\{ props.name \}\}/gi, mProperty);
+
+          htmlForProperty = htmlForProperty.replace(/\{\{ props.gecko.initial.layout \}\}/gi, mValue.gecko.initial.layout);
+          htmlForProperty = htmlForProperty.replace(/\{\{ props.gecko.initial.paint \}\}/gi, mValue.gecko.initial.paint);
+          htmlForProperty = htmlForProperty.replace(/\{\{ props.gecko.initial.composite \}\}/gi, mValue.gecko.initial.composite);
+          htmlForProperty = htmlForProperty.replace(/\{\{ props.gecko.change.layout \}\}/gi, mValue.gecko.change.layout);
+          htmlForProperty = htmlForProperty.replace(/\{\{ props.gecko.change.paint \}\}/gi, mValue.gecko.change.paint);
+          htmlForProperty = htmlForProperty.replace(/\{\{ props.gecko.change.composite \}\}/gi, mValue.gecko.change.composite);
+          htmlForProperty = htmlForProperty.replace(/\{\{ props.chromium.initial.layout \}\}/gi, mValue.chromium.initial.layout);
+          htmlForProperty = htmlForProperty.replace(/\{\{ props.chromium.initial.paint \}\}/gi, mValue.chromium.initial.paint);
+          htmlForProperty = htmlForProperty.replace(/\{\{ props.chromium.initial.composite \}\}/gi, mValue.chromium.initial.composite);
+          htmlForProperty = htmlForProperty.replace(/\{\{ props.chromium.change.layout \}\}/gi, mValue.chromium.change.layout);
+          htmlForProperty = htmlForProperty.replace(/\{\{ props.chromium.change.paint \}\}/gi, mValue.chromium.change.paint);
+          htmlForProperty = htmlForProperty.replace(/\{\{ props.chromium.change.composite \}\}/gi, mValue.chromium.change.composite);
+          htmlForProperty = htmlForProperty.replace(/\{\{ props.isInitialSame \}\}/gi, isInitialSame);
+          htmlForProperty = htmlForProperty.replace(/\{\{ props.isChangeSame \}\}/gi, isChangeSame);
+
+
+
+
+          htmlString += htmlForProperty;
+        }
+
+        document.querySelector('.property-list').innerHTML = htmlString;
+      });
+    </script>
+    <style>
+
+      body {
+        background-color: #EEEEEE;
+        font-family: monospace;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .toprow {
+        font-size: 10px;
+      }
+
+      .property > * {
+        display: inline-block;
+        overflow: hidden;
+        vertical-align: middle;
+      }
+
+      .property {
+        padding: 10px 0;
+      }
+
+      .property:hover {
+        background-color: white;
+      }
+
+      #legend > li {
+        list-style: none;
+        vertical-align: middle;
+        padding: 4px;
+      }
+
+      #legend > li > .dot {
+        margin-right: 12px;
+      }
+
+      .isDifferent {
+        outline: 1px dotted #F06;
+      }
+
+      .legend {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        margin-right: 12px;
+      }
+
+      .vendorname {
+        width: 70px;
+        display: inline-block;
+        font-size: 10px;
+      }
+
+      .property-name {
+        font-weight: normal;
+        font-size: 12px;
+        width: 200px;
+      }
+
+      .property-initial {
+        width: 200px;
+        padding: 4px;
+      }
+
+      .property-change {
+        padding: 4px;
+      }
+
+      .dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border: 2px solid #999;
+        background: white;
+        padding: 3px;
+      }
+
+      .dot.layout {
+        border: 2px solid #928ae4;
+        opacity: .5
+      }
+      .dot.layout.true {
+        background: #928ae4;
+        opacity: 1
+      }
+      .dot.paint {
+        border: 2px solid #84ab65;
+        opacity: .5
+      }
+      .dot.paint.true {
+        background: #84ab65;
+        opacity: 1
+      }
+      .dot.composite {
+        border: 2px solid #376016;
+        opacity: .5
+      }
+      .dot.composite.true {
+        background: #376016;
+        opacity: 1
+      }
+      .dot.null {
+        border-color: #cacaca;
+        background: #cacaca
+      }
+    </style>
+  </head>
+  <body>
+    <h1>CSS Trigers</h1>
+    <ul id="legend">
+      <li><span class="dot layout true"></span>layout</li>
+      <li><span class="dot paint true"></span>Paint</li>
+      <li><span class="dot composite true"></span>Composite</li>
+      <li><span class="dot null"></span>Not applicable</li>
+      <li><span class="dot false"></span>Does not trigger</li>
+      <li><span class="legend isDifferent"></span>Different behavior between Chromium and Gecko</li>
+    </ul>
+
+    <section class="property toprow">
+      <h1 class="property-name"></h1>
+      <div class="property-initial">
+        change from default
+      </div>
+      <div class="property-change">
+        update value
+      </div>
+    </section>
+
+    <div class="property-list"></div>
+
+    <div class="hidden" id="property-template">
+      <section class="property" data-name="{{ props.name }}" data-initial="{{ props.initial.layout }},{{ props.initial.paint }},{{ props.initial.composite }}" data-change="{{ props.change.layout }},{{ props.change.paint }},{{ props.change.composite }}">
+        <h1 class="property-name">{{ props.name }}</h1>
+
+        <div class="property-initial {{ props.isInitialSame }}">
+          <div class="vendor gecko">
+            <span class="vendorname">gecko</span>
+            <span class="dot layout {{ props.gecko.initial.layout }}"></span>
+            <span class="dot paint {{ props.gecko.initial.paint }}"></span>
+            <span class="dot composite {{ props.gecko.initial.composite }}"></span>
+          </div>
+          <div class="vendor chromium">
+            <span class="vendorname">chromium</span>
+            <span class="dot layout {{ props.chromium.initial.layout }}"></span>
+            <span class="dot paint {{ props.chromium.initial.paint }}"></span>
+            <span class="dot composite {{ props.chromium.initial.composite }}"></span>
+          </div>
+        </div>
+
+        <div class="property-change {{ props.isChangeSame }}">
+          <div class="vendor gecko">
+            <span class="dot layout {{ props.gecko.change.layout }}"></span>
+            <span class="dot paint {{ props.gecko.change.paint }}"></span>
+            <span class="dot composite {{ props.gecko.change.composite }}"></span>
+          </div>
+          <div class="vendor chromium">
+            <span class="dot layout {{ props.chromium.change.layout }}"></span>
+            <span class="dot paint {{ props.chromium.change.paint }}"></span>
+            <span class="dot composite {{ props.chromium.change.composite }}"></span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </body>
+</html>
